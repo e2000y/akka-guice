@@ -2,7 +2,7 @@ organization := "com.sandinh"
 
 name := "akka-guice"
 
-version := "3.3.0"
+version := "3.4.0"
 
 scalaVersion := "2.13.1"
 
@@ -15,9 +15,10 @@ scalacOptions ++= (CrossVersion.scalaApiVersion(scalaVersion.value) match {
 })
 
 libraryDependencies ++= Seq(
-  "com.google.inject.extensions" % "guice-assistedinject" % "4.2.2",
+  "com.google.inject.extensions" % "guice-assistedinject" % "5.0.1",
   "com.typesafe.akka"   %% "akka-actor"   % "2.6.1",
   "com.typesafe.akka"   %% "akka-testkit" % "2.6.1" % Test
 )
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+
