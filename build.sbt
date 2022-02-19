@@ -1,24 +1,52 @@
-organization := "com.sandinh"
+lazy val `akka-guice` = projectMatrix
+  .in(file("."))
+  .akkaAxis(akka25, Seq(scala211, scala212, scala213))
+  .akkaAxis(akka26, Seq(scala212, scala213, scala3))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.google.inject.extensions" % "guice-assistedinject" % (akkaAxis.value match {
+        // To keep compatible with akka-guid:3.2.0. TODO update
+        case `akka25` => "4.1.0"
+        case _        => "5.1.0"
+      }),
+      "org.scalatest" %% "scalatest" % "3.2.10" % Test,
+    ) ++ akka("actor", "testkit" -> Test).value,
+    scalacOptions := {
+      val old = scalacOptions.value
+      CrossVersion.scalaApiVersion(scalaVersion.value) match {
+        case Some((2, n)) if n > 11 =>
+          old :+ raw"-Wconf:msg=isAccessible in class AccessibleObject:i"
+        case _ => old
+      }
+    },
+    // opens java.base/java.lang for java 16+ to workaround error:
+    // InaccessibleObjectException: Unable to make protected final java.lang.Class
+    //  java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+    //  throws java.lang.ClassFormatError accessible:
+    //  module java.base does not "opens java.lang" to unnamed module @42a6eabd (ReflectUtils.java:61)
+    addOpensForTest(),
+  )
 
-name := "akka-guice"
-
-version := "3.4.0_5.1"
-
-scalaVersion := "2.13.1"
-
-crossScalaVersions := Seq("2.12.10", "2.13.1")
-
-scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-feature", "-target:jvm-1.8")
-scalacOptions ++= (CrossVersion.scalaApiVersion(scalaVersion.value) match {
-  case Some((2, 11)) => Seq("-Ybackend:GenBCode")
-  case _ => Nil
-})
-
-libraryDependencies ++= Seq(
-  "com.google.inject.extensions" % "guice-assistedinject" % "5.1.0",
-  "com.typesafe.akka"   %% "akka-actor"   % "2.6.1",
-  "com.typesafe.akka"   %% "akka-testkit" % "2.6.1" % Test
+inThisBuild(
+  Seq(
+    versionScheme := Some("semver-spec"),
+    developers := List(
+      Developer(
+        "thanhbv",
+        "Bui Viet Thanh",
+        "thanhbv@sandinh.net",
+        url("https://sandinh.com")
+      ),
+    ),
+  )
 )
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
-
+// we need this aggregating project only because
+// `mqtt-proto`'s source is NOT in a subdirectory
+lazy val root = Project("akka-guice", file("."))
+  .settings(skipPublish)
+  .settings(
+    Compile / unmanagedSourceDirectories := Nil,
+    Test / unmanagedSourceDirectories := Nil
+  )
+  .aggregate(`akka-guice`.projectRefs: _*)
