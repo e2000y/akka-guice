@@ -1,7 +1,7 @@
 // format: OFF
 package com.sandinh.akuice
 
-import java.lang.reflect.Method
+import java.lang.reflect.{Method, InaccessibleObjectException}
 import akka.actor.Actor
 import com.google.inject.assistedinject.FactoryModuleBuilder
 import com.google.inject.{Binder, AbstractModule}
@@ -12,10 +12,11 @@ trait AkkaGuiceSupport {
 
   private def accessBinder: Binder = {
     val method: Method = classOf[AbstractModule].getDeclaredMethod("binder")
-    if (!method.isAccessible) {
-      method.setAccessible(true)
+    if (method.trySetAccessible()) {
+      method.invoke(this).asInstanceOf[Binder]
+    } else {
+      throw new InaccessibleObjectException()
     }
-    method.invoke(this).asInstanceOf[Binder]
   }
 
   /** Bind an actor factory.
