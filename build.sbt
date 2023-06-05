@@ -7,7 +7,7 @@ lazy val `akka-guice` = projectMatrix
       "com.google.inject.extensions" % "guice-assistedinject" % (akkaAxis.value match {
         // To keep compatible with akka-guid:3.2.0. TODO update
         case `akka25` => "4.1.0"
-        case _        => "5.1.0"
+        case _        => "6.0.0"
       }),
       "org.scalatest" %% "scalatest" % "3.2.10" % Test,
     ) ++ akka("actor", "testkit" -> Test).value,
